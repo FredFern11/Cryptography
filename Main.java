@@ -18,26 +18,56 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args)  {
-        
+        try {
+            test(10000);
+        } catch (Exception e) {}
     }
 
-    public static void test(int n, int id) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    public static void test(int n) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         for (int j = 0; j < n; j++) {
-            System.out.println(j + "(" + id + ")");
             Random random = new Random();
             SecretKey secretKey = generateKey(128);
             IvParameterSpec IV = generateIv();
 
+//            char[] charArr = new char[random.nextInt(100)];
             char[] charArr = new char[random.nextInt(100)];
             for (int i = 0; i < charArr.length; i++) {
                 charArr[i] = (char) random.nextInt(-128, 128);
             }
             String text = new String(charArr);
-            String myAes = AES.toBase64(new Encoder().encrypt(text.getBytes(), secretKey.getEncoded(), IV.getIV()));
+            Encoder encoder = new Encoder();
+            String myAes = encoder.toBase64(encoder.encrypt(text.getBytes(), secretKey.getEncoded(), IV.getIV()));
             String provided = encrypt(new String(text), secretKey, IV);
-//            System.out.println(myAes + "\n" + provided);
-            if (!myAes.equals(provided)) System.exit(11);
+            System.out.println(myAes + "\n" + provided + "\n");
+            if (!myAes.equals(provided)) return;
         }
+        System.out.println("Passed");
+    }
+
+    public static byte search() {
+        try {
+            Random random = new Random();
+            SecretKey secretKey = generateKey(128);
+            IvParameterSpec IV = generateIv();
+            char[] charArr = new char[16];
+            charArr[15] = 0;
+            for (int i = 0; i < charArr.length-1; i++) {
+                charArr[i] = (char) random.nextInt(-128, 128);
+            }
+            String text = new String(charArr);
+            Encoder encoder = new Encoder();
+            String provided = encrypt(text, secretKey, IV);
+            String aes = "";
+            while (!aes.equals(provided)) {
+                System.out.println((int) charArr[15]);
+                aes = encoder.toBase64(encoder.encrypt(new String(charArr).getBytes(), secretKey.getEncoded(), IV.getIV()));
+                charArr[15] += 1;
+                System.out.println(aes);
+            }
+            return (byte) charArr[15];
+
+        } catch (Exception e) {}
+        return -1;
     }
 
     public static SecretKey generateKey(int n) throws NoSuchAlgorithmException {
