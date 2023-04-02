@@ -74,8 +74,8 @@ public class Encoder extends AES {
             if (i != 9) mixColumns(state, matrix);
             key = schedule(key, i, sbox);
             addMatrix(state, key);
-//            display(state);
-//            System.out.println();
+            display(state);
+            System.out.println("---");
         }
         return state.clone();
     }

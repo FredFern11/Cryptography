@@ -18,9 +18,28 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args)  {
-        try {
-            test(10000);
-        } catch (Exception e) {}
+        Encoder encoder = new Encoder();
+        Decoder decoder = new Decoder();
+
+//        String string;
+//        for (int i = 5; i < 10000; i++) {
+//            string = decoder.randStr(i);
+//            String base64 = encoder.toBase64(string.getBytes());
+//            String ascii = encoder.toAscii(base64);
+//            if (!string.equals(ascii)) {
+//                System.out.println(string + "\n" + base64 + "\n" + ascii);
+//                System.exit(i);
+//            }
+//        }
+//        System.out.println("---- Test #10000 passed ----");
+
+        byte[] message = "Two One Nine Two".getBytes();
+        byte[] password = "Thats my Kung Fu".getBytes();
+
+        byte[] cipherText = encoder.encrypt(message, password);
+//        byte[] plainTxt = decoder.decrypt(cipherText, password);
+//        System.out.println(encoder.toBase64(message) + "\n" + encoder.toBase64(plainTxt));
+
     }
 
     public static void test(int n) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {

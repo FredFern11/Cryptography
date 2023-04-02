@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Random;
 
 public class Utils {
 
@@ -98,37 +99,55 @@ public class Utils {
      */
     public String toBase64(byte[] bytes) {
         char[] table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
-        // may need to change length of encoded
+        if (bytes.length == 0) return null;
         double size = bytes.length*8.0/6;
         final int rawLength = size % 1 == 0 ? (int) size : (int) size + 1;
-//        System.out.println(rawLength);
         int extra = (rawLength % 4 == 0 ? 0 : 4 - rawLength % 4);
         char[] encoded = new char[rawLength + extra];
-
-
-//        System.out.println(toBinary(bytes));
-
-//        System.out.println(Integer.toBinaryString(Integer.parseInt("29C", 16)));
         int value = 0;
-//        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < bytes.length*8; i++) {
             if ((i % 6 == 0 && i != 0)) {
-//                System.out.println(stringBuilder + "->" + value);
-//                stringBuilder = new StringBuilder();
                 encoded[i/6-1] = table[value];
                 value = 0;
             }
-
+            // TODO: 2023-03-24 change this to match toAscii method
             boolean bit = bitValue(bytes[i/8], 7-(i%8));
-//            stringBuilder.append(bit?1:0);
             value += bit ? Math.pow(2, 5-(i%6)) : 0;
         }
-//        System.out.println(new String(encoded));
-//        System.out.println(rawLength);
         encoded[rawLength-1] = table[value];
         if (extra > 0) Arrays.fill(encoded, rawLength, encoded.length, '=');
 
         return new String(encoded);
+    }
+
+    public String toAscii(String base64) {
+        if (base64 == null) return "";
+        char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+        StringBuilder original = new StringBuilder();
+        int sum = 0;
+        int padCount = 0;
+
+        for (int i = 0; i < base64.length(); i++) {
+            char ch = base64.charAt(i);
+//            if (i > base64.length() - 5) value = value << 2 * (padCount-i%4);
+            if (ch != '=') sum += (int) (search(alpha, ch) * Math.pow(64, 3-i%4));
+            else padCount++;
+
+            if (i%4 == 3) {
+                for (int j = 2; j >= (i > base64.length()-5 ? padCount : 0); j--) {
+                    original.append((char) ((sum >> 8*j) % 256));
+                }
+                sum = 0;
+            }
+        }
+        return original.toString();
+    }
+
+    public int search(char[] array, char target) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == target) return i;
+        }
+        return -1;
     }
 
     /**
@@ -165,11 +184,20 @@ public class Utils {
      * @param hexString string containing only hexadecimal digits
      * @return array of bytes
      */
-    public static byte[] getBytes(String hexString) {
+    public byte[] getBytes(String hexString) {
         byte[] bytes = new byte[hexString.length()/2];
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte) Integer.parseInt(hexString.substring(i*2, (i+1)*2), 16);
         }
         return bytes;
+    }
+
+    public String randStr(int length) {
+        Random random = new Random();
+        char[] array = new char[length];
+        for (int i = 0; i < length; i++) {
+            array[i] = (char) random.nextInt(0, 128);
+        }
+        return new String(array);
     }
 }

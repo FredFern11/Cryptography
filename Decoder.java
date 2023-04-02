@@ -1,5 +1,5 @@
 public class Decoder extends AES {
-    int[][] sbox = {
+    private int[][] sbox = {
             // 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
             {0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb}, // 0
             {0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},
@@ -27,8 +27,26 @@ public class Decoder extends AES {
     };
 
     public byte[][] decrypt(byte[][] state, byte[][] key) {
+        for (int i = 0; i < 10; i++) {
+            display(state);
+            System.out.println();
+            key = schedule(key, 9-i, sbox);
+            addMatrix(state, key);
+            if (i != 0) mixColumns(state, matrix);
+            shiftRows(state, false);
+            subBytes(state, sbox);
+        }
 
+        addMatrix(state, key);
+        return state;
     }
 
-
+    public byte[] decrypt(byte[] message, byte[] key) {
+        byte[] global = new byte[(message.length / 16 + 1) * 16];
+        for (int i = global.length / 16 - 1; i >= 0; i--) {
+            byte[] encrypted = flatten(decrypt(extract(message, i), toMatrix(key)));
+            System.arraycopy(encrypted, 0, global, 16 * i, 16);
+        }
+        return global;
+    }
 }
