@@ -2,6 +2,8 @@ import java.util.*;
 // TODO: 2023-03-06 change the padding bytes: the sum of the bytes in the last block % fist byte = length of the padding bytes (see goodnotes) 
 
 public class Encoder extends AES {
+    private byte[][][] keys;
+
     private int[][] sbox = {
             // 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
             {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76}, // 0
@@ -24,17 +26,56 @@ public class Encoder extends AES {
 
     private byte[][] matrix = {{2, 3, 1, 1}, {1, 2, 3, 1}, {1, 1, 2, 3}, {3, 1, 1, 2}};
 
+    public Encoder(byte[] key) {
+        setKeys(key);
+    }
+
+    public void setKeys(byte[] message) {
+        schedule(toMatrix(message), sbox);
+    }
+
+    public Decoder genDecoder() {
+        return new Decoder(keys.clone());
+    }
+
+    /**
+     * Generate the next round key from the previous one.
+     *
+     * @param initKey previous matrix key
+     * @return next round keY
+     */
+    public void schedule(byte[][] initKey, int[][] table) {
+        keys = new byte[11][4][4];
+        keys[0] = initKey;
+
+        int[] rcon = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
+
+        for (int k = 1; k < keys.length; k++) {
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    if (i == 0) {
+                        byte[] rotWord = rotate(keys[k-1][3].clone());
+                        rotWord[j] = substitute(rotWord[j], table);
+                        keys[k][i][j] = (byte) (rotWord[j] ^ keys[k-1][i][j]);
+                        if (j == 0) keys[k][i][j] ^= rcon[k-1];
+                    } else {
+                        keys[k][i][j] = (byte) (keys[k][i - 1][j] ^ keys[k-1][i][j]);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Using the electronic code book (ECB) mode, encrypts a message with a key, both 1D bytes array.
      *
      * @param message 16 bytes long
-     * @param key     16 bytes long
      * @return 16 byte long encrypted message with key
      */
-    public byte[] encrypt(byte[] message, byte[] key) {
+    public byte[] encrypt(byte[] message) {
         byte[] global = new byte[(message.length / 16 + 1) * 16];
         for (int i = 0; i < global.length / 16; i++) {
-            byte[] encrypted = flatten(encrypt(extract(message, i), toMatrix(key)));
+            byte[] encrypted = flatten(encrypt(extract(message, i)));
             System.arraycopy(encrypted, 0, global, 16 * i, 16);
         }
         return global;
@@ -44,15 +85,15 @@ public class Encoder extends AES {
      * Using the cipher block chaining (CBC) mode, encrypts a message with a key, both 1D bytes array. Each
      *
      * @param message 16 bytes long
-     * @param key     16 bytes long
+     * @param initVector     16 bytes long
      * @return 16 byte long encrypted message with key
      */
-    public byte[] encrypt(byte[] message, byte[] key, byte[] initVector) {
+    public byte[] encrypt(byte[] message, byte[] initVector) {
         byte[] global = new byte[(message.length / 16 + 1) * 16];
-        byte[][] block = encrypt(addMatrix(extract(message, 0), toMatrix(initVector)), toMatrix(key));
+        byte[][] block = encrypt(addMatrix(extract(message, 0), toMatrix(initVector)));
         System.arraycopy(flatten(block), 0, global, 0, 16);
         for (int i = 1; i < global.length / 16; i++) {
-            block = encrypt(addMatrix(extract(message, i), block), toMatrix(key));
+            block = encrypt(addMatrix(extract(message, i), block));
             System.arraycopy(flatten(block), 0, global, 16 * i, 16);
         }
         return global;
@@ -62,20 +103,20 @@ public class Encoder extends AES {
      * encypts a state with a key, both under the matrix form
      *
      * @param state 4x4 byte matrix
-     * @param key   4x4 byte matrix
      * @return matrix of bytes
      */
-    public byte[][] encrypt(byte[][] state, byte[][] key) {
-        addMatrix(state, key);
+    public byte[][] encrypt(byte[][] state) {
+//        display(state);
+//        System.out.println();
+        addMatrix(state, keys[0]);
 
         for (int i = 0; i < 10; i++) {
             subBytes(state, sbox);
             shiftRows(state, true);
             if (i != 9) mixColumns(state, matrix);
-            key = schedule(key, i, sbox);
-            addMatrix(state, key);
-            display(state);
-            System.out.println("---");
+            addMatrix(state, keys[i+1]);
+//            display(state);
+//            System.out.println();
         }
         return state.clone();
     }

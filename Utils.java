@@ -5,7 +5,7 @@ public class Utils {
 
     public byte[][] extract(byte[] message, int block) {
         byte[][] state = new byte[4][4];
-        int i = 16 * block-1;
+        int i = 16 * block - 1;
         byte pad = (byte) (16 - message.length % 16);
 
         while (++i < 16 * (block+1)) {
@@ -192,7 +192,7 @@ public class Utils {
         return bytes;
     }
 
-    public String randStr(int length) {
+    public static String randStr(int length) {
         Random random = new Random();
         char[] array = new char[length];
         for (int i = 0; i < length; i++) {

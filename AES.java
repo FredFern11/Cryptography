@@ -1,40 +1,6 @@
 import java.util.*;
 
 public abstract class AES extends Utils {
-//    public static void main(String[] args) {
-//        AES aes = new AES();
-//        byte[] text = ("abcdabcdabcdabcdabcdabcdabcd").getBytes();
-//        byte[] key = "1234567891234567".getBytes();
-//        byte[] initVector = "1324354657687910".getBytes();
-//        byte[] encrypted = aes.encrypt(text, key, initVector);
-//        System.out.println(aes.toBase64(encrypted));
-//    }
-
-    /**
-     * Generate the next round key from the previous one.
-     *
-     * @param prevKey previous matrix key
-     * @param n       the round index
-     * @return next round key
-     */
-    public byte[][] schedule(byte[][] prevKey, int n, int[][] table) {
-        int[] rcon = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
-        byte[][] nextKey = new byte[4][4];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < nextKey.length; j++) {
-                if (i == 0) {
-                    byte[] rotWord = rotate(prevKey[prevKey.length - 1].clone());
-                    rotWord[j] = substitute(rotWord[j], table);
-                    nextKey[i][j] = (byte) (rotWord[j] ^ prevKey[i][j]);
-                    if (j == 0) nextKey[i][j] ^= rcon[n];
-                } else {
-                    nextKey[i][j] = (byte) (nextKey[i - 1][j] ^ prevKey[i][j]);
-                }
-            }
-        }
-        return nextKey;
-    }
-
     /**
      * Perform a left circular shift
      *

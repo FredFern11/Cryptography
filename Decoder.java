@@ -1,4 +1,10 @@
+import java.util.Arrays;
+
+// TODO: 2023-04-06 include IV for decryption 
+
 public class Decoder extends AES {
+    private byte[][][] keys;
+
     private int[][] sbox = {
             // 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
             {0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb}, // 0
@@ -26,27 +32,38 @@ public class Decoder extends AES {
             {0X0B, 0X0D, 0X09, 0X0E}
     };
 
-    public byte[][] decrypt(byte[][] state, byte[][] key) {
+    public Decoder(byte[][][] keys) {
+        this.keys = keys.clone();
+    }
+
+    public byte[][] decrypt(byte[][] state) {
         for (int i = 0; i < 10; i++) {
-            display(state);
-            System.out.println();
-            key = schedule(key, 9-i, sbox);
-            addMatrix(state, key);
+//            display(state);
+//            System.out.println();
+            addMatrix(state, keys[keys.length-1-i]);
             if (i != 0) mixColumns(state, matrix);
             shiftRows(state, false);
             subBytes(state, sbox);
         }
 
-        addMatrix(state, key);
+        addMatrix(state, keys[0]);
         return state;
     }
 
-    public byte[] decrypt(byte[] message, byte[] key) {
-        byte[] global = new byte[(message.length / 16 + 1) * 16];
+    public byte[] decrypt(byte[] message) {
+        if (keys == null) throw new RuntimeException("Round keys not initialized");
+
+        byte[] global = new byte[message.length];
         for (int i = global.length / 16 - 1; i >= 0; i--) {
-            byte[] encrypted = flatten(decrypt(extract(message, i), toMatrix(key)));
+            byte[] encrypted = flatten(decrypt(extract(message, i)));
             System.arraycopy(encrypted, 0, global, 16 * i, 16);
         }
-        return global;
+        return clean(global);
+    }
+
+    private byte[] clean(byte[] message) {
+        byte[] cleaned = new byte[message.length - message[message.length-1]];
+        System.arraycopy(message, 0, cleaned, 0, cleaned.length);
+        return cleaned;
     }
 }
