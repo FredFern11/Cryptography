@@ -1,6 +1,4 @@
-import java.util.Arrays;
-
-// TODO: 2023-04-06 include IV for decryption 
+// TODO: 2023-04-06 include IV for decryption
 
 public class Decoder extends AES {
     private byte[][][] keys;
@@ -40,14 +38,26 @@ public class Decoder extends AES {
         for (int i = 0; i < 10; i++) {
 //            display(state);
 //            System.out.println();
-            addMatrix(state, keys[keys.length-1-i]);
+            XORMatrix(state, keys[keys.length-1-i]);
             if (i != 0) mixColumns(state, matrix);
             shiftRows(state, false);
             subBytes(state, sbox);
         }
 
-        addMatrix(state, keys[0]);
+        XORMatrix(state, keys[0]);
         return state;
+    }
+
+    public byte[] decrypt(byte[] message, byte[] IV) {
+        if (keys == null) throw new RuntimeException("Round keys not initialized");
+
+        byte[] global = new byte[message.length];
+        for (int i = global.length / 16 - 1; i >= 0; i--) {
+            byte[] decrypted = flatten(XORMatrix(decrypt(extract(message, i)), (i > 0 ? extract(message, i-1) : toMatrix(IV))));
+            System.arraycopy(decrypted, 0, global, 16 * i, 16);
+        }
+
+        return clean(global);
     }
 
     public byte[] decrypt(byte[] message) {
@@ -55,8 +65,8 @@ public class Decoder extends AES {
 
         byte[] global = new byte[message.length];
         for (int i = global.length / 16 - 1; i >= 0; i--) {
-            byte[] encrypted = flatten(decrypt(extract(message, i)));
-            System.arraycopy(encrypted, 0, global, 16 * i, 16);
+            byte[] decrypted = flatten(decrypt(extract(message, i)));
+            System.arraycopy(decrypted, 0, global, 16 * i, 16);
         }
         return clean(global);
     }

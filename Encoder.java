@@ -1,5 +1,4 @@
-import java.util.*;
-// TODO: 2023-03-06 change the padding bytes: the sum of the bytes in the last block % fist byte = length of the padding bytes (see goodnotes) 
+// TODO: 2023-03-06 change the padding bytes: the sum of the bytes in the last block % fist byte = length of the padding bytes (see goodnotes)
 
 public class Encoder extends AES {
     private byte[][][] keys;
@@ -88,12 +87,12 @@ public class Encoder extends AES {
      * @param initVector     16 bytes long
      * @return 16 byte long encrypted message with key
      */
-    public byte[] encrypt(byte[] message, byte[] initVector) {
+    public byte[] encrypt(byte[] message, byte[] IV) {
         byte[] global = new byte[(message.length / 16 + 1) * 16];
-        byte[][] block = encrypt(addMatrix(extract(message, 0), toMatrix(initVector)));
+        byte[][] block = encrypt(XORMatrix(extract(message, 0), toMatrix(IV)));
         System.arraycopy(flatten(block), 0, global, 0, 16);
         for (int i = 1; i < global.length / 16; i++) {
-            block = encrypt(addMatrix(extract(message, i), block));
+            block = encrypt(XORMatrix(extract(message, i), block));
             System.arraycopy(flatten(block), 0, global, 16 * i, 16);
         }
         return global;
@@ -108,13 +107,13 @@ public class Encoder extends AES {
     public byte[][] encrypt(byte[][] state) {
 //        display(state);
 //        System.out.println();
-        addMatrix(state, keys[0]);
+        XORMatrix(state, keys[0]);
 
         for (int i = 0; i < 10; i++) {
             subBytes(state, sbox);
             shiftRows(state, true);
             if (i != 9) mixColumns(state, matrix);
-            addMatrix(state, keys[i+1]);
+            XORMatrix(state, keys[i+1]);
 //            display(state);
 //            System.out.println();
         }

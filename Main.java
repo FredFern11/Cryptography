@@ -21,10 +21,11 @@ public class Main {
         Random random = new Random();
         String message = "!@#$%?&*():'/àçù><«»|δλ";
         String key = "Let me live nowa";
+        String IV = "abcdefghijllmnop";
         Encoder encoder = new Encoder(key.getBytes());
         Decoder decoder = encoder.genDecoder();
 
-        System.out.println(encoder.toBase64(encoder.encrypt(message.getBytes())));
-        System.out.println(new String(decoder.decrypt(encoder.encrypt(message.getBytes()))));
+        System.out.println(encoder.toBase64(encoder.encrypt(message.getBytes(), IV.getBytes())));
+        System.out.println(new String(decoder.decrypt(encoder.encrypt(message.getBytes(), IV.getBytes()), IV.getBytes())));
     }
 }
