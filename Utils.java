@@ -3,7 +3,7 @@ import java.util.Random;
 
 public class Utils {
 
-    public byte[][] extract(byte[] message, int block) {
+    public Matrix extract(byte[] message, int block) {
         byte[][] state = new byte[4][4];
         int i = 16 * block - 1;
         byte pad = (byte) (16 - message.length % 16);
@@ -15,7 +15,7 @@ public class Utils {
                 state[(i % 16) / 4][(i % 16) % 4] = pad;
             }
         }
-        return state;
+        return new Matrix(state);
     }
     /**
      * Extract a bit out of a byte
@@ -40,28 +40,13 @@ public class Utils {
         return hex;
     }
 
-    /**
-     * Print the matrix
-     * @param matrix
-     */
-    public void display(byte[][] matrix) {
-        String[][] hex = hexMatrix(matrix);
-        StringBuilder string = new StringBuilder();
-        for (int i = 0; i < hex.length; i++) {
-            for (int j = 0; j < hex[0].length; j++) {
-                if (hex[j][i].length() < 2) string.append("0").append(hex[j][i]).append(" ");
-                else string.append(hex[j][i]).append(" ");
-            }
-            System.out.println(string);
-            string = new StringBuilder();
-        }
-    }
 
-    public int intValue(byte num) {
+
+    public static int intValue(byte num) {
         return (num < 0 ? num + 256 : num);
     }
 
-    public byte byteValue(int num) {
+    public static byte byteValue(int num) {
         return (byte) (num > 128 ? num - 256 : num);
     }
 
@@ -80,16 +65,6 @@ public class Utils {
             binary.append("|");
         }
         return binary.toString();
-    }
-
-    private String toHexString(byte[] array) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            String element = Integer.toHexString(intValue(array[i]));
-            if (element.length() < 2) builder.append("0");
-            builder.append(element);
-        }
-        return builder.toString();
     }
 
     /**
@@ -148,34 +123,6 @@ public class Utils {
             if (array[i] == target) return i;
         }
         return -1;
-    }
-
-    /**
-     * Convert a matrix of integers into an array of integers.
-     * @param matrix 2D array of integers
-     * @return 1D array traverse in a word wise direction
-     */
-    public byte[] flatten(byte[][] matrix) {
-        byte[] flat = new byte[matrix.length * matrix.length];
-        for (int i = 0; i < flat.length; i++) {
-            flat[i] = matrix[i / matrix.length][i % matrix.length];
-        }
-        return flat;
-    }
-
-    /**
-     * Convert an integer array into a matrix.
-     * @param array integer array of size 16
-     * @return 4x4 matrix
-     */
-    public byte[][] toMatrix(byte[] array) {
-        byte[][] matrix = new byte[4][4];
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[0].length; j++) {
-                matrix[i][j] = array[4*i+j];
-            }
-        }
-        return matrix;
     }
 
     /**

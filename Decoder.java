@@ -1,9 +1,5 @@
-// TODO: 2023-04-06 include IV for decryption
-
 public class Decoder extends AES {
-    private byte[][][] keys;
-
-    private int[][] sbox = {
+    public int[][] sboxInv = {
             // 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
             {0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb}, // 0
             {0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},
@@ -23,49 +19,41 @@ public class Decoder extends AES {
             {0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d} // f
     };
 
-    private byte[][] matrix = {
+    private byte[][] mixColumns = {
             {0x0E, 0X0B, 0X0D, 0X09},
             {0X09, 0X0E, 0X0B, 0X0D},
             {0X0D, 0X09, 0X0E, 0X0B},
             {0X0B, 0X0D, 0X09, 0X0E}
     };
 
-    public Decoder(byte[][][] keys) {
-        this.keys = keys.clone();
-    }
-
-    public byte[][] decrypt(byte[][] state) {
+    public Matrix decrypt(Matrix state, Key key) {
         for (int i = 0; i < 10; i++) {
 //            display(state);
 //            System.out.println();
-            XORMatrix(state, keys[keys.length-1-i]);
-            if (i != 0) mixColumns(state, matrix);
+            state.XOR(key.getRound(10-i));
+            if (i != 0) state = mixColumns(state, mixColumns);
             shiftRows(state, false);
-            subBytes(state, sbox);
+            subBytes(state, sboxInv);
         }
-
-        XORMatrix(state, keys[0]);
+        state.XOR(key.getRound(0));
         return state;
     }
 
-    public byte[] decrypt(byte[] message, byte[] IV) {
-        if (keys == null) throw new RuntimeException("Round keys not initialized");
-
+    public byte[] decrypt(byte[] message, Key key, byte[] IV) {
         byte[] global = new byte[message.length];
         for (int i = global.length / 16 - 1; i >= 0; i--) {
-            byte[] decrypted = flatten(XORMatrix(decrypt(extract(message, i)), (i > 0 ? extract(message, i-1) : toMatrix(IV))));
+            Matrix prevBlock = (i > 0 ? extract(message, i-1) : new Matrix(IV));
+            byte[] decrypted = decrypt(extract(message, i), key).XOR(prevBlock).flatten();
             System.arraycopy(decrypted, 0, global, 16 * i, 16);
         }
 
         return clean(global);
     }
 
-    public byte[] decrypt(byte[] message) {
-        if (keys == null) throw new RuntimeException("Round keys not initialized");
-
+    public byte[] decrypt(byte[] message, Key key) {
         byte[] global = new byte[message.length];
         for (int i = global.length / 16 - 1; i >= 0; i--) {
-            byte[] decrypted = flatten(decrypt(extract(message, i)));
+            byte[] decrypted = decrypt(extract(message, i), key).flatten();
             System.arraycopy(decrypted, 0, global, 16 * i, 16);
         }
         return clean(global);
