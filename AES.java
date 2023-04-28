@@ -27,12 +27,13 @@ public abstract class AES extends Utils {
      */
     public byte[] rotate(byte[] word) {
         // 67 20 46 75 -> 20 46 75 67
-        byte temp = word[0];
+        byte[] clone = word.clone();
+        byte temp = clone[0];
         for (int i = 0; i < 3; i++) {
-            word[i] = word[i + 1];
+            clone[i] = clone[i + 1];
         }
-        word[3] = temp;
-        return word;
+        clone[3] = temp;
+        return clone;
     }
 
     /**
@@ -41,7 +42,7 @@ public abstract class AES extends Utils {
      * @param state matrix of integers
      * @return new state with substituted values
      */
-    public Matrix subBytes(Matrix state, int[][] table) {
+    public Matrix substitute(Matrix state, int[][] table) {
         for (int i = 0; i < state.getLength(); i++) {
             for (int j = 0; j < state.get(i).length; j++) {
                 state.morph(i, j, n -> substitute(n, table));
@@ -60,6 +61,14 @@ public abstract class AES extends Utils {
     public byte substitute(byte token, int[][] table) {
         int num = intValue(token);
         return byteValue(table[num / 16][num % 16]);
+    }
+
+    public byte[] substitute(byte[] array, int[][] table) {
+        byte[] clone = array.clone();
+        for (int i = 0; i < clone.length; i++) {
+            clone[i] = substitute(clone[i], table);
+        }
+        return clone;
     }
 
     /**

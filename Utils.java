@@ -147,4 +147,24 @@ public class Utils {
         }
         return new String(array);
     }
+
+    private byte[] hexToBytes(String string) {
+        byte[] array = new byte[string.length()/2];
+        for (int i = 0; i < array.length; i++) {
+            String element = string.substring(2*i, 2*(i+1));
+            array[i] = (byte) Integer.parseInt(element, 16);
+        }
+        return array;
+    }
+
+    private String bytesToHex(byte[] array) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            String element = Integer.toHexString(array[i]);
+            if (element.length() < 2) builder.append("0");
+            if (element.length() > 2) element = element.substring(element.length()-2);
+            builder.append(element).append(" ");
+        }
+        return builder.toString();
+    }
 }

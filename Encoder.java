@@ -45,11 +45,11 @@ public class Encoder extends AES {
         state.XOR(key.getRound(0));
 //        state.display();
 
-        for (int i = 0; i < 10; i++) {
-            subBytes(state, sbox);
+        for (int i = 1; i < key.size(); i++) {
+            substitute(state, sbox);
             shiftRows(state, true);
-            if (i != 9) state = mixColumns(state, mixColumn);
-            state.XOR(key.getRound(i+1));
+            if (i != key.size()-1) state = mixColumns(state, mixColumn);
+            state.XOR(key.getRound(i));
 //            state.display();
         }
         return new Matrix(state);

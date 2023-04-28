@@ -27,13 +27,11 @@ public class Decoder extends AES {
     };
 
     public Matrix decrypt(Matrix state, Key key) {
-        for (int i = 0; i < 10; i++) {
-//            display(state);
-//            System.out.println();
-            state.XOR(key.getRound(10-i));
-            if (i != 0) state = mixColumns(state, mixColumns);
+        for (int i = key.size()-1; i > 0; i--) {
+            state.XOR(key.getRound(i));
+            if (i != key.size()-1) state = mixColumns(state, mixColumns);
             shiftRows(state, false);
-            subBytes(state, sboxInv);
+            substitute(state, sboxInv);
         }
         state.XOR(key.getRound(0));
         return state;
@@ -46,7 +44,6 @@ public class Decoder extends AES {
             byte[] decrypted = decrypt(extract(message, i), key).XOR(prevBlock).flatten();
             System.arraycopy(decrypted, 0, global, 16 * i, 16);
         }
-
         return clean(global);
     }
 
